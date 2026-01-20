@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>My Daily Dashboard</title>
+
+    <style>
+      :root {
+        --bg: linear-gradient(135deg, #dbeafe, #f0f9ff);
+        --card: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --line: #e5e7eb;
+        --hover: #f1f5f9;
+        --focus: #e0f2fe;
+      }
+
+      body.dark {
+        --bg: linear-gradient(135deg, #020617, #020617);
+        --card: #0f172a;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --line: #1e293b;
+        --hover: #1e293b;
+        --focus: #1e293b;
+      }
+
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        transition: background 0.3s ease;
+      }
+
+      .card {
+        background: var(--card);
+        width: 460px;
+        padding: 40px 45px;
+        border-radius: 18px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        animation: fadeUp 0.6s ease-out;
+        transition:
+          transform 0.3s ease,
+          background 0.3s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+      }
+
+      @keyframes fadeUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      #date {
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing: 0.5px;
+      }
+
+      #time {
+        font-size: 20px;
+        font-weight: 500;
+        margin-bottom: 14px;
+      }
+
+      h1 {
+        font-size: 32px;
+        margin: 0 0 6px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      hr {
+        border: none;
+        height: 1px;
+        background: var(--line);
+        margin: 30px 0;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      button {
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        background: var(--hover);
+        color: var(--text);
+        transition: background 0.2s ease;
+      }
+
+      button:hover {
+        background: var(--focus);
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      li {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 12px 0;
+        padding: 6px 8px;
+        border-radius: 8px;
+        transition:
+          background 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      li:hover {
+        background: var(--hover);
+        transform: translateX(4px);
+      }
+
+      input[type="checkbox"] {
+        transform: scale(1.2);
+        cursor: pointer;
+      }
+
+      span[contenteditable="true"] {
+        outline: none;
+        padding: 2px 4px;
+        border-radius: 4px;
+        flex: 1;
+      }
+
+      span[contenteditable="true"]:focus {
+        background: var(--focus);
+      }
+
+      .delete {
+        background: transparent;
+        border: none;
+        color: var(--muted);
+        font-size: 16px;
+        cursor: pointer;
+        opacity: 0;
+        transition:
+          opacity 0.2s ease,
+          color 0.2s ease;
+      }
+
+      li:hover .delete {
+        opacity: 1;
+      }
+
+      .delete:hover {
+        color: #ef4444;
+      }
+
+      .quote {
+        margin-top: 30px;
+        text-align: center;
+        font-style: italic;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <div class="header">
+        <p id="date"></p>
+        <p id="time"></p>
+        <h1>Hi, Im Sandilya!</h1>
+        <p class="subtitle">Welcome to my Daily Dashboard</p>
+      </div>
+
+      <hr />
+
+      <div class="controls">
+        <button id="addGoal">➕ New Goal</button>
+        <button id="toggleDark">🌙 Dark Mode</button>
+      </div>
+
+      <ul id="goals"></ul>
+
+      <p class="quote">"Small progress everyday."</p>
+    </div>
+
+    <script>
+      function updateDateTime() {
+        const now = new Date();
+        document.getElementById("date").textContent =
+          "📅 " +
+          now.toLocaleDateString(undefined, {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+        document.getElementById("time").textContent = now.toLocaleTimeString();
+      }
+
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
+      const goalsList = document.getElementById("goals");
+
+      function saveGoals() {
+        const data = [];
+        document.querySelectorAll("#goals li").forEach((li) => {
+          data.push({
+            text: li.querySelector("span").innerText,
+            checked: li.querySelector("input").checked,
+          });
+        });
+        localStorage.setItem("goals", JSON.stringify(data));
+      }
+
+      function loadGoals() {
+        const saved = JSON.parse(localStorage.getItem("goals")) || [];
+        goalsList.innerHTML = "";
+        saved.forEach((goal) => addGoal(goal.text, goal.checked));
+      }
+
+      function addGoal(text = "New goal", checked = false) {
+        const li = document.createElement("li");
+
+        li.innerHTML = `
+        <input type="checkbox" ${checked ? "checked" : ""}>
+        <span contenteditable="true">${text}</span>
+        <button class="delete">✕</button>
+      `;
+
+        li.querySelector("input").addEventListener("change", saveGoals);
+        li.querySelector("span").addEventListener("input", saveGoals);
+
+        li.querySelector(".delete").addEventListener("click", () => {
+          li.remove();
+          saveGoals();
+        });
+
+        goalsList.appendChild(li);
+        saveGoals();
+      }
+
+      document.getElementById("addGoal").onclick = () => addGoal();
+
+      /* ===== Dark Mode ===== */
+      const toggle = document.getElementById("toggleDark");
+
+      toggle.onclick = () => {
+        document.body.classList.toggle("dark");
+        localStorage.setItem("dark", document.body.classList.contains("dark"));
+      };
+
+      if (localStorage.getItem("dark") === "true") {
+        document.body.classList.add("dark");
+      }
+
+      loadGoals();
+    </script>
+  </body>
+</html>
